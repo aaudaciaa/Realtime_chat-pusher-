@@ -1,0 +1,77 @@
+<h1>pusher 테스트</h1>
+<p></p>
+<!-- <form action="/talk">
+  <input type="text">
+  <input type="submit">
+</form> -->
+
+<%= form_tag 'talk', method: :get do %> <!-- remote: true 삭제 -->
+  <%= text_field_tag :msg %>
+  <%= submit_tag :submit, id: "talk_submit" %>
+<% end %>
+
+<div id="talks">
+  <% @talks.reverse.each do |talk| %>
+    <p><%= talk.message %></p>
+  <% end %>
+</div>
+
+<script>
+  $(function() {
+    console.log("Pusher talk로 옮겨옴")
+    // Enable pusher logging - don't include this in production
+    Pusher.logToConsole = true;
+
+    var pusher = new Pusher('facb6228691672d04344', {
+      cluster: 'ap1',
+      encrypted: true
+    });
+
+    // 1. '/talk' : 서버에 저장 & 푸셔 서버에 데이터 넣기
+    $('#talk_submit').click(function() {
+      $.ajax({
+        url: "/talk",
+        method: 'GET',
+        data: $('#msg').val(),
+        success: function() {
+          // 1. Pusher 서버에 있는 정보를 바탕으로 채널에 있는 데이터를 출력
+
+          var channel = pusher.subscribe('audacia');
+          channel.bind('hello', function(data) {
+            $('#talks').preppend("<p>" + data.message + "</p>")
+          });
+
+          // 2. input 창을 비워준다. / input창에 커서가 가도록 한다.
+          $('#msg').val("");
+          $('#msg').focus();
+        }
+      });
+    });
+
+
+    var channel = pusher.subscribe('audacia');
+    channel.bind('hello', function(data) {
+      // alert(data.message);
+      $('#talks').preppend("<p>" + data.message + "</p>")
+    });
+  })
+
+</script>
+
+<!-- <script>
+  // talk.js.erb에 아래 코드 다 옮김
+  // console.log("Pusher 써볼께")
+  // // Enable pusher logging - don't include this in production
+  // Pusher.logToConsole = true;
+  //
+  // var pusher = new Pusher('facb6228691672d04344', {
+  //   cluster: 'ap1',
+  //   encrypted: true
+  // });
+  //
+  // var channel = pusher.subscribe('audacia');
+  // channel.bind('hello', function(data) {
+  //   // alert(data.message);
+  //   $('#talks').append("")
+  // });
+</script> -->
